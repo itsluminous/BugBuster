@@ -129,7 +129,7 @@ exports.App = styles_1.withStyles(styles)(class App extends React.Component {
             !userInfoResponse || userInfoResponse.loggedIn ? (React.createElement(not_logged_out_1.NotLoggedOut, { loggedIn: !!userInfoResponse && userInfoResponse.loggedIn, activeProjects: (userInfoResponse &&
                     userInfoResponse.userInfo &&
                     userInfoResponse.userInfo.active_projects) ||
-                    [], outOfVideos: outOfVideos, disableTabCapture: this.props.disableTabCapture, bugreplayDisabledOnTab: this.props.bugreplayDisabledOnTab, screenshot: this.props.screenshot, recording: this.props.recording, report: this.props.report, reports: this.props.reports, jira: this.props.jira, trello: this.props.trello, updateReport: this.props.updateReport, cancelReport: this.props.cancelReport, submitReport: this.props.submitReport, startRecordingTab: this.props.startRecordingTab, startRecordingScreen: this.props.startRecordingScreen, stopRecording: this.props.stopRecording, takeScreenshot: this.props.takeScreenshot, deleteScreenshot: this.props.deleteScreenshot, clickDoneTakingScreenshots: this.props.clickDoneTakingScreenshots })) : (React.createElement(logged_out_1.LoggedOutHeader, { loginUrl: `${window.baseUrl}/#/login` })),
+                    [], outOfVideos: outOfVideos, disableTabCapture: this.props.disableTabCapture, bugbusterDisabledOnTab: this.props.bugbusterDisabledOnTab, screenshot: this.props.screenshot, recording: this.props.recording, report: this.props.report, reports: this.props.reports, jira: this.props.jira, trello: this.props.trello, updateReport: this.props.updateReport, cancelReport: this.props.cancelReport, submitReport: this.props.submitReport, startRecordingTab: this.props.startRecordingTab, startRecordingScreen: this.props.startRecordingScreen, stopRecording: this.props.stopRecording, takeScreenshot: this.props.takeScreenshot, deleteScreenshot: this.props.deleteScreenshot, clickDoneTakingScreenshots: this.props.clickDoneTakingScreenshots })) : (React.createElement(logged_out_1.LoggedOutHeader, { loginUrl: `${window.baseUrl}/#/login` })),
             this.props.alert && (React.createElement(alert_1.Alert, { message: this.props.alert, dismiss: this.props.dismissAlert })),
             this.props.reports.failed.map(failed => (React.createElement(alert_1.Retry, { failed: failed, retrySubmitReport: this.props.retrySubmitReport, cancelRetrySubmitReport: this.props.cancelRetrySubmitReport })))));
     }
@@ -210,7 +210,7 @@ exports.Header = styles_1.withStyles(styles)(class Header extends React.Componen
         const className = this.props.classes.header + ' ' + (this.props.className || '');
         return (React.createElement("div", { className: className },
             React.createElement("a", { target: "_blank", href: window.baseUrl },
-                React.createElement("img", { src: "/img/full_logo.svg", className: this.props.classes.icon })),
+                ),
             React.createElement("div", { className: this.props.classes.headerContents }, this.props.children)));
     }
 });
@@ -235,8 +235,8 @@ exports.LoggedOutHeader = styles_1.withStyles(styles)(class LoggedOutHeader exte
             React.createElement(core_1.Typography, { variant: "caption", className: this.props.classes.loggedOut },
                 "You are logged",
                 React.createElement("br", null),
-                "out of BugReplay."),
-            React.createElement(core_1.Button, { variant: "contained", color: "secondary", title: "Login to BugReplay", target: "_blank", className: this.props.classes.loginButton, href: this.props.loginUrl }, "LOG IN")));
+                "out of BugBuster."),
+            React.createElement(core_1.Button, { variant: "contained", color: "secondary", title: "Login to BugBuster", target: "_blank", className: this.props.classes.loginButton, href: this.props.loginUrl }, "LOG IN")));
     }
 });
 
@@ -439,7 +439,7 @@ class ScreenshotThumb extends React.Component {
         return (React.createElement("div", { className: "br-screenshot-thumb" },
             React.createElement("div", { className: "br-screenshot-block", style: { backgroundImage: `url("${this.props.screenshot.uri}")` } },
                 React.createElement("div", { className: "br-screenshot-tools" },
-                    React.createElement("a", { type: "button", className: "btn br-screenshot-tools__btn br-download", download: "bugreplay-screenshot.png", href: this.props.screenshot.uri, title: "Download this screenshot", "aria-label": "Download this screenshot" }),
+                    React.createElement("a", { type: "button", className: "btn br-screenshot-tools__btn br-download", download: "bugbuster-screenshot.png", href: this.props.screenshot.uri, title: "Download this screenshot", "aria-label": "Download this screenshot" }),
                     React.createElement("a", { type: "button", className: "btn br-screenshot-tools__btn br-trash", onClick: () => this.props.onScreenshotDelete(this.props.screenshot), title: "Remove this screenshot", "aria-label": "Remove this screenshot" })))));
     }
 }
@@ -718,9 +718,7 @@ class VideoPreview extends React.Component {
     }
     render() {
         return (React.createElement(React.Fragment, null,
-            React.createElement("video", { id: "playback", className: this.props.classes.preview, controls: true }),
-            React.createElement("p", null,
-                React.createElement("a", { target: "_blank", href: "https://bugreplay.zendesk.com/hc/en-us/articles/115002853747" }, "Video not playing?"))));
+            React.createElement("video", { id: "playback", className: this.props.classes.preview, controls: true })));
     }
 }
 exports.VideoPreview = VideoPreview;
@@ -735,19 +733,19 @@ const browser_detection_1 = require("../browser-detection");
 const theme_1 = require("./theme");
 const app_1 = require("./app");
 const actions_1 = require("./actions");
-function render(dispatchUserActions, state, bugreplayContainer) {
+function render(dispatchUserActions, state, bugbusterContainer) {
     return ReactDOM.render(React.createElement(styles_1.MuiThemeProvider, { theme: theme_1.theme },
-        React.createElement(app_1.App, { disableTabCapture: browser_detection_1.capabilities.chromeDisableTabCapture, chromeVersionTooOld: browser_detection_1.capabilities.chromeVersionTooOld, updateReport: dispatchUserActions.updateReport, cancelReport: dispatchUserActions.cancelReport, submitReport: dispatchUserActions.submitReport, retrySubmitReport: dispatchUserActions.retrySubmitReport, cancelRetrySubmitReport: dispatchUserActions.cancelRetrySubmitReport, startRecordingTab: dispatchUserActions.startRecordingTab, startRecordingScreen: dispatchUserActions.startRecordingScreen, stopRecording: dispatchUserActions.stopRecording, deleteScreenshot: dispatchUserActions.deleteScreenshot, clickDoneTakingScreenshots: dispatchUserActions.clickDoneTakingScreenshots, takeScreenshot: dispatchUserActions.takeScreenshot, dismissAlert: dispatchUserActions.dismissAlert, bugreplayDisabledOnTab: !!state.popup.bugreplayDisabledOnTab, screenshot: state.screenshot, recording: state.recording, report: state.report, reports: state.reports, userInfoResponse: state.userInfoResponse, jira: state.jira, trello: state.trello, alert: state.alert })), bugreplayContainer);
+        React.createElement(app_1.App, { disableTabCapture: browser_detection_1.capabilities.chromeDisableTabCapture, chromeVersionTooOld: browser_detection_1.capabilities.chromeVersionTooOld, updateReport: dispatchUserActions.updateReport, cancelReport: dispatchUserActions.cancelReport, submitReport: dispatchUserActions.submitReport, retrySubmitReport: dispatchUserActions.retrySubmitReport, cancelRetrySubmitReport: dispatchUserActions.cancelRetrySubmitReport, startRecordingTab: dispatchUserActions.startRecordingTab, startRecordingScreen: dispatchUserActions.startRecordingScreen, stopRecording: dispatchUserActions.stopRecording, deleteScreenshot: dispatchUserActions.deleteScreenshot, clickDoneTakingScreenshots: dispatchUserActions.clickDoneTakingScreenshots, takeScreenshot: dispatchUserActions.takeScreenshot, dismissAlert: dispatchUserActions.dismissAlert, bugbusterDisabledOnTab: !!state.popup.bugbusterDisabledOnTab, screenshot: state.screenshot, recording: state.recording, report: state.report, reports: state.reports, userInfoResponse: state.userInfoResponse, jira: state.jira, trello: state.trello, alert: state.alert })), bugbusterContainer);
 }
 function mount(chrome, window) {
-    const bugreplayContainer = window.document.getElementById('br-container');
+    const bugbusterContainer = window.document.getElementById('br-container');
     let dispatchUserActions;
     let unsubscribe;
     chrome.runtime.getBackgroundPage(function (background) {
         Object.assign(window, { background });
         const store = background.store;
         dispatchUserActions = actions_1.actions(store.dispatch, store.getState);
-        const onStateChange = () => render(dispatchUserActions, store.getState(), bugreplayContainer);
+        const onStateChange = () => render(dispatchUserActions, store.getState(), bugbusterContainer);
         onStateChange();
         unsubscribe = store.subscribe(onStateChange);
         dispatchUserActions.popupConnect();
@@ -895,9 +893,9 @@ const report_list_1 = require("../components/report-list");
 const screenshot_panel_1 = require("../components/screenshot-panel");
 class NotLoggedOutContent extends React.Component {
     render() {
-        const { loggedIn, outOfVideos, disableTabCapture, bugreplayDisabledOnTab, activeProjects, screenshot, recording, report, reports, deleteScreenshot, updateReport, cancelReport, submitReport, jira, trello, } = this.props;
-        if (bugreplayDisabledOnTab) {
-            return (React.createElement(core_1.Typography, { variant: "h6", color: "primary", style: { margin: 12 } }, "BugReplay does not work on this page. Please navigate to another webpage and try again."));
+        const { loggedIn, outOfVideos, disableTabCapture, bugbusterDisabledOnTab, activeProjects, screenshot, recording, report, reports, deleteScreenshot, updateReport, cancelReport, submitReport, jira, trello, } = this.props;
+        if (bugbusterDisabledOnTab) {
+            return (React.createElement(core_1.Typography, { variant: "h6", color: "primary", style: { margin: 12 } }, "BugBuster does not work on this page. Please navigate to another webpage and try again."));
         }
         const takingScreenshots = Boolean(screenshot.requestedByUser || screenshot.screenshots.length);
         return (React.createElement(React.Fragment, null,
@@ -906,14 +904,7 @@ class NotLoggedOutContent extends React.Component {
                     "0 videos remaining",
                     React.createElement("br", null),
                     React.createElement("a", { target: "_blank", href: `${window.baseUrl}/#/subscriptions_billing` }, "Need more?"))) : (React.createElement(React.Fragment, null,
-                    !disableTabCapture && (React.createElement(image_button_1.StartRecordingTab, { startRecordingTab: this.props.startRecordingTab })),
-                    React.createElement(image_button_1.StartRecordingScreen, { startRecordingScreen: this.props.startRecordingScreen }))),
-                React.createElement(image_button_1.TakeScreenshot, { takeScreenshot: this.props.takeScreenshot })))),
-            React.createElement("hr", { key: "br-button-panel__separator", className: "br-button-panel__separator" }),
-            !report.started &&
-                !takingScreenshots &&
-                !recording.started &&
-                (reports.fetchedFromServer ? (React.createElement(report_list_1.ReportList, { processingReports: reports.processing, processedReports: reports.processed })) : (React.createElement("p", null, "Loading...")))));
+                    !disableTabCapture && (React.createElement(image_button_1.StartRecordingTab, { startRecordingTab: this.props.startRecordingTab })))))))));
     }
 }
 class NotLoggedOut extends React.Component {

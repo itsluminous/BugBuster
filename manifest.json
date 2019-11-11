@@ -4,8 +4,8 @@
    },
    "browser_action": {
       "default_icon": {
-         "19": "img/bugreplay_19.png",
-         "38": "img/bugreplay_38.png"
+         "19": "img/bugbuster_19.png",
+         "38": "img/bugbuster_38.png"
       },
       "default_popup": "html/popup.html"
    },
@@ -14,13 +14,13 @@
       "matches": [ "https://app.bugreplay.com/*", "https://rc-dot-bugreplay-client.appspot.com/*", "http://local.bugreplay/*", "http://dev.bugreplay.com/*", "https://bugreplay-site-dev.appspot.com/*" ]
    },
    "icons": {
-      "128": "img/bugreplay_128.transparent.png"
+      "128": "img/bugbuster_128.transparent.png"
    },
    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjB/N1uqNsg+rJneJX9cSldV+z2A/36H4HDbMJMUfWeYNwsYnu4ftAZC7S82ibayPSlJ3HAwjoPxLe1/2zm5xWnv9tvZe1HurztLln08w5yO5ZkrcxqOQ4ckkCVKtlC4WiQUhtMsOCIKmqDaiXVcSQVZskQzVj8LDYqUbSL8d5oT5QH6eMt23KkUo7yqKJtCOSBzcUnTqrcHTYyXz7ippi6I14ALvdYi0jN9qyIUotQr5Zu8PynFZopii1Oif3HuYnxcCnkI79cPJQMLxPO3DjN4Nk2nDKUtSoGh6CgxWpcI9FluEW9R3NXlPxXyuqeVNG61iMBhjAnk1ObSBiNwFOwIDAQAB",
    "manifest_version": 2,
-   "name": "BugReplay",
+   "name": "BugBuster",
    "permissions": [ "\u003Call_urls>", "activeTab", "alarms", "storage", "notifications", "tabs", "webNavigation", "webRequest", "debugger", "tabCapture", "desktopCapture" ],
-   "short_name": "BugReplay",
+   "short_name": "BugBuster",
    "update_url": "https://clients2.google.com/service/update2/crx",
    "version": "3.0.17",
    "web_accessible_resources": [  ]

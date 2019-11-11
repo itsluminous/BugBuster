@@ -6,9 +6,9 @@ function actions(dispatch) {
         debuggerDetached: () => dispatch({
             type: 'DEBUGGER_DETACHED',
         }),
-        activeTabDetected: (activeTab, bugreplayDisabledOnTab) => dispatch({
+        activeTabDetected: (activeTab, bugbusterDisabledOnTab) => dispatch({
             type: 'ACTIVE_TAB_DETECTED',
-            payload: { activeTab, bugreplayDisabledOnTab },
+            payload: { activeTab, bugbusterDisabledOnTab },
         }),
         noActiveTabDetected: () => dispatch({
             type: 'NO_ACTIVE_TAB_DETECTED',
@@ -120,7 +120,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const URI = require("urijs");
 const lodash_1 = require("lodash");
-function handleBugReplayJson(json) {
+function handleBugBusterJson(json) {
     if (!json.success) {
         throw json.error[0];
     }
@@ -129,13 +129,13 @@ function handleBugReplayJson(json) {
     }
     return json.data;
 }
-function handleBugReplayResponse(response) {
+function handleBugBusterResponse(response) {
     return __awaiter(this, void 0, void 0, function* () {
         if (response.status >= 400) {
             const message = yield response.text();
             throw { message, statusCode: response.status };
         }
-        return handleBugReplayJson(yield response.json());
+        return handleBugBusterJson(yield response.json());
     });
 }
 function api(window, settings, csrf) {
@@ -148,7 +148,7 @@ function api(window, settings, csrf) {
                         method: 'GET',
                         headers: { Accept: 'application/json' },
                     };
-                    return handleBugReplayResponse(yield window.fetch(url, opts));
+                    return handleBugBusterResponse(yield window.fetch(url, opts));
                 });
             }
             let attempts = 0; // tslint:disable-line:no-let
@@ -205,7 +205,7 @@ function api(window, settings, csrf) {
                                 jqXHR.setRequestHeader('X-BR-XSRF-TOKEN', csrf.get());
                             }, success: resolve, error: reject }, lodash_1.omit(opts, 'errorMessageForUser')));
                     });
-                    return handleBugReplayJson(json);
+                    return handleBugBusterJson(json);
                 });
             }
             let attempts = 0; // tslint:disable-line:no-let
@@ -724,7 +724,7 @@ function notifications(chromeNotifications, chromeTabs) {
             chromeNotifications.create(report.client_url, {
                 type: 'basic',
                 iconUrl: '/img/icon_active_128.png',
-                title: 'Your BugReplay report is ready',
+                title: 'Your BugBuster report is ready',
                 message: 'Your report has finished processing and is ready to view.',
                 eventTime: Date.now(),
                 isClickable: true,
@@ -1712,7 +1712,7 @@ function reducer(settings, api, initialState = emptyState, action) {
             return Object.assign(Object.assign({}, initialState), { popup: {
                     connected: true,
                     activeTab: action.payload.activeTab,
-                    bugreplayDisabledOnTab: action.payload.bugreplayDisabledOnTab,
+                    bugbusterDisabledOnTab: action.payload.bugbusterDisabledOnTab,
                 } });
         }
         case 'NO_ACTIVE_TAB_DETECTED': {
@@ -2022,10 +2022,10 @@ function checkActiveTab(tabs, dispatchBackgroundActions) {
         if (!activeTab) {
             return dispatchBackgroundActions.noActiveTabDetected();
         }
-        const bugreplayDisabledOnTab = activeTab.url
+        const bugbusterDisabledOnTab = activeTab.url
             ? !activeTab.url.startsWith('http')
             : false;
-        dispatchBackgroundActions.activeTabDetected(activeTab, bugreplayDisabledOnTab);
+        dispatchBackgroundActions.activeTabDetected(activeTab, bugbusterDisabledOnTab);
     });
 }
 exports.checkActiveTab = checkActiveTab;
