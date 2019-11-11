@@ -882,6 +882,13 @@ function download(data, filename, type) {
 		}, 0); 
 	}
 }
+
+function pad2(n) { return n < 10 ? '0' + n : n }
+
+function getTimeStamp(){
+	var date = new Date();
+	return date.getFullYear().toString() + pad2(date.getMonth() + 1) + pad2( date.getDate()) + pad2( date.getHours() ) + pad2( date.getMinutes() ) + pad2( date.getSeconds() ) 
+}
 		
 // Set the report id so that even if creating the report times out or fails we can clean up the partially created report
 function doSubmitReport(navigator, report, api, settings, setReportId ) {
@@ -905,7 +912,7 @@ function doSubmitReport(navigator, report, api, settings, setReportId ) {
 		// Generate the zip file asynchronously
 		zip.generateAsync({type:"blob"})
 		.then(function(content) {
-		    download(content, "BugReport.zip", "zip");
+		    download(content, "BugReport-" + getTimeStamp() + ".zip", "zip");
 		});
         
 		return {
