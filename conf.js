@@ -1,1 +1,1 @@
-window.baseUrl = 'https://app.bugreplay.com';
+window.baseUrl = 'https://www.google.com';

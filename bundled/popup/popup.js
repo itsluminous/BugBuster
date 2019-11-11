@@ -208,10 +208,7 @@ const styles = (theme) => ({
 exports.Header = styles_1.withStyles(styles)(class Header extends React.Component {
     render() {
         const className = this.props.classes.header + ' ' + (this.props.className || '');
-        return (React.createElement("div", { className: className },
-            React.createElement("a", { target: "_blank", href: window.baseUrl },
-                ),
-            React.createElement("div", { className: this.props.classes.headerContents }, this.props.children)));
+        return (React.createElement("div", { className: className }));
     }
 });
 
@@ -462,7 +459,7 @@ exports.CancelReport = styles_1.withStyles(styles_2.styles)(class CancelReport e
                 React.createElement("p", null, "There is no undo."),
                 React.createElement("div", { className: "button_row" },
                     React.createElement(core_1.Button, { onClick: this.props.undo, variant: "contained", className: this.props.classes.cancelButton }, "Cancel"),
-                    React.createElement(core_1.Button, { onClick: this.props.cancelReport, variant: "contained", color: "secondary", className: this.props.classes.footerButton }, "Yes, delete it")))));
+                    React.createElement(core_1.Button, { onClick: this.props.cancelReport, variant: "contained", color: "secondary", className: this.props.classes.footerButton }, "Delete it")))));
     }
 });
 
@@ -522,12 +519,7 @@ exports.SubmitReport = styles_1.withStyles(styles_2.styles)(class SubmitReport e
                     React.createElement(Fields, { classes: this.props.classes, activeProjects: this.props.activeProjects, reportDetails: this.props.reportDetails, jira: this.props.jira, trello: this.props.trello, updateReport: this.props.updateReport })),
                 React.createElement("div", { className: this.props.classes.footerButtonRow },
                     React.createElement(core_1.Button, { onClick: () => this.setState({ consideringCancelling: true }), variant: "contained", className: this.props.classes.cancelButton }, "Cancel"),
-                    React.createElement(core_1.Button, { type: "submit", id: "submit-recording", variant: "contained", color: "secondary", className: this.props.classes.footerButton, 
-                        // Checking if the user is logged in should be long done at this point,
-                        // but just in case we don't let the user submit until we know they're logged in
-                        disabled: !this.props.loggedIn ||
-                            !this.props.jira.fetchedFromServer ||
-                            !this.props.trello.fetchedFromServer }, "Save")))));
+                    React.createElement(core_1.Button, { type: "submit", id: "submit-recording", variant: "contained", color: "secondary", className: this.props.classes.footerButton }, "Save")))));
     }
 });
 

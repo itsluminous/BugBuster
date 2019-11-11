@@ -138,419 +138,16 @@ function handleBugBusterResponse(response) {
         return handleBugBusterJson(yield response.json());
     });
 }
-function api(window, settings, csrf) {
-    function fetchBugreplay(path) {
-        return __awaiter(this, void 0, void 0, function* () {
-            function makeRequest() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    const url = window.baseUrl + path;
-                    const opts = {
-                        method: 'GET',
-                        headers: { Accept: 'application/json' },
-                    };
-                    return handleBugBusterResponse(yield window.fetch(url, opts));
-                });
-            }
-            let attempts = 0; // tslint:disable-line:no-let
-            while (true) {
-                attempts++;
-                try {
-                    return yield makeRequest();
-                }
-                catch (error) {
-                    if (attempts < 5 &&
-                        (error.statusCode === 502 || error.statusCode === 503)) {
-                        continue;
-                    }
-                    throw error;
-                }
-            }
-        });
-    }
+function api(window, settings, csrf) {    
     function getUserInfo() {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const userInfo = yield fetchBugreplay('/api/user/info?is_active=1&include_active_projects=1&with_jira=true');
-                return { loggedIn: true, userInfo };
-            }
-            catch (error) {
-                if (error.error_name === 'ErrUserNotLoggedIn') {
-                    return { loggedIn: false };
-                }
-                throw error;
-            }
-        });
-    }
-    function getReports(page = 1, rows = settings.maxReportsToShow) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const data = yield fetchBugreplay(`/api/report/list/user?page=${page}&rows=${rows}`);
-                return data.reports;
-            }
-            catch (error) {
-                if (error.error_name === 'ErrUserNotLoggedIn') {
-                    return [];
-                }
-                throw error;
-            }
-        });
-    }
-    function wrappedAjax(opts) {
-        return __awaiter(this, void 0, void 0, function* () {
-            function makeRequest() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    const json = yield new Promise((resolve, reject) => {
-                        window.$.ajax(Object.assign({ beforeSend(jqXHR) {
-                                jqXHR.setRequestHeader('X-BR-Origin', window.browser.runtime.id);
-                                jqXHR.setRequestHeader('X-BR-XSRF-TOKEN', csrf.get());
-                            }, success: resolve, error: reject }, lodash_1.omit(opts, 'errorMessageForUser')));
-                    });
-                    return handleBugBusterJson(json);
-                });
-            }
-            let attempts = 0; // tslint:disable-line:no-let
-            while (true) {
-                attempts++;
-                try {
-                    return yield makeRequest();
-                }
-                catch (error) {
-                    if (error.status === 403 && attempts < 2) {
-                        yield csrf.refresh();
-                        continue;
-                    }
-                    else if (attempts < 5 &&
-                        (error.status === 502 || error.status === 503)) {
-                        continue;
-                    }
-                    else {
-                        Object.assign(error, {
-                            errorMessageForUser: opts.errorMessageForUser,
-                        });
-                        throw error;
-                    }
-                }
-            }
-        });
-    }
-    function postAjax(path, data, opts) {
-        return wrappedAjax(Object.assign({ url: window.baseUrl + path, method: 'POST', data }, opts));
-    }
-    const prettyAssetNames = {
-        sourceMap: 'sourcemaps',
-        rawVideo: 'video data',
-        rawTimeOffset: 'video data',
-        rawConsole: 'console logs',
-        screenshot: 'screenshot',
-    };	
-
-    function uploadAsset(asset_type, blob) {
-        return __awaiter(this, void 0, void 0, function* () {
-			const { jwt, upload_link } = yield postAjax('/api/asset/get_upload_link', {
-                asset_type,
-                file_size: blob.size,
-            }, {
-                errorMessageForUser: `Failed to upload ${prettyAssetNames[asset_type]}. Your report may appear corrupted.`,
-            });
-            yield window.fetch(upload_link, { method: 'PUT', body: blob });
-            return { jwt };
-        });
-    }
-    function uploadVideo(videoBlob) {
-        return uploadAsset('rawVideo', videoBlob);
-    }
-    function uploadTimeOffsets(frameTimes) {
-        const timeOffsets = new Blob([JSON.stringify({ time_offsets: frameTimes })]);
-        return uploadAsset('rawTimeOffset', timeOffsets);
-    }
-    function uploadConsoleLogs(consoleData) {
-        return uploadAsset('rawConsole', new Blob([consoleData]));
-    }
-    function uploadScreenshot(screenshot) {
-        return uploadAsset('screenshot', screenshot.blob);
-    }
-    function startTranscode(video_jwt, time_offset_jwt) {
-        return postAjax('/api/report/start_transcode', {
-            video_jwt,
-            time_offset_jwt,
-        }, {
-            errorMessageForUser: 'Failed to send video.',
-        });
-    }
-    function uploadNetworkData(data, report_jwt) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const blob = new Blob([data], { type: 'text/plain;charset=UTF-8' });
-            const fd = new FormData();
-            fd.append('file', blob, 'networktraffic.log');
-            const path = '/api/report/network_traffic/upload?' +
-                new URLSearchParams({ report_jwt, with_jwt: 'true' });
-            return postAjax(path, fd, {
-                processData: false,
-                contentType: false,
-                errorMessageForUser: 'Failed to upload network data.',
-            });
-        });
-    }
-    function sourceMapStorageCheck(sourceMapHash) {
-        const keys = Object.getOwnPropertyNames(sourceMapHash);
-        return wrappedAjax({
-            url: window.baseUrl + '/api/asset/source_map',
-            method: 'GET',
-            data: { hashes: JSON.stringify(keys) },
-            errorMessageForUser: 'Could not determine whether sourcemap was previously saved.',
-        });
-    }
-    function getSourceMap(url) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                window.$.ajax({
-                    url,
-                    method: 'GET',
-                    success: (_, __, jqXHR) => {
-                        resolve(jqXHR.responseText);
-                    },
-                    error: reject,
-                });
-            });
-        });
-    }
-    function uploadSourceMap(scriptObj) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const origUrl = new URI(scriptObj.url);
-            const sourceMapURI = new URI(origUrl.toString())
-                .query('')
-                .filename(scriptObj.sourceMapURL);
-            let sourceMapText; // tslint:disable-line:no-let
-            try {
-                sourceMapText = yield getSourceMap(sourceMapURI.toString());
-            }
-            catch (error) {
-                return { jwt: null, error };
-            }
-            const blobText = new Blob([sourceMapText], { type: 'application/json' });
-            return uploadAsset('sourceMap', blobText);
-        });
-    }
-    function encodeSourceMapParams(jwt, scriptObj) {
-        const uri = new URI(scriptObj.sourceMapURL);
-        let sourceMapURL = uri.toString(); // tslint:disable-line:no-let
-        if (uri.scheme() === 'data') {
-            const commaPos = sourceMapURL.indexOf(',');
-            if (commaPos === -1) {
-                // This is a malformed data url? Should this be reported separately?
-                console.error('couldnt find comma in data uri', uri.toString());
-            }
-            else {
-                const header = sourceMapURL.substr(0, commaPos + 1);
-                sourceMapURL = header + 'encoded-data-redacted';
-            }
-        }
-        return {
-            jwt,
-            hash: scriptObj.hash,
-            script_url: scriptObj.url,
-            url: sourceMapURL,
-        };
-    }
-    function createSourceMap(jwt, scriptObj) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const params = encodeSourceMapParams(jwt, scriptObj);
-            return postAjax('/api/asset/source_map', params, {
-                errorMessageForUser: 'Failed to create source map.',
-            });
-        });
-    }
-    function uploadSourceMaps(sourceMapHash) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const res = yield sourceMapStorageCheck(sourceMapHash);
-            const alreadyPresentHashes = new Set((res.source_maps || []).map(sourceMap => sourceMap.hash));
-            const hashesToUpload = Object.getOwnPropertyNames(sourceMapHash).filter(hash => !alreadyPresentHashes.has(hash));
-            const jwts = [];
-            const errors = [];
-            const uploadingSourceMaps = hashesToUpload.map((hash) => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    const uploaded = yield uploadSourceMap(sourceMapHash[hash]);
-                    if (uploaded.jwt) {
-                        yield createSourceMap(uploaded.jwt, sourceMapHash[hash]);
-                        jwts.push(uploaded.jwt);
-                    }
-                    else {
-                        errors.push(uploaded.error);
-                    }
-                }
-                catch (err) {
-                    errors.push(err);
-                }
-            }));
-            yield Promise.all(uploadingSourceMaps);
-            return { jwts, errors };
-        });
-    }
-    function uploadRecordingAssets(recorders) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const videoBlob = recorders.video.blob;
-            const videoFrameTimes = recorders.video.frameTimes;
-            const consoleData = recorders.tab.console.data;
-            const uploadingVideo = uploadVideo(videoBlob);
-            const uploadingTimeOffsets = uploadTimeOffsets(videoFrameTimes);
-            const uploadingConsoleData = consoleData
-                ? uploadConsoleLogs(consoleData)
-                : Promise.resolve({ jwt: null });
-            const uploadedVideo = yield uploadingVideo;
-            const uploadedTimeOffsets = yield uploadingTimeOffsets;
-            yield startTranscode(uploadedVideo.jwt, uploadedTimeOffsets.jwt);
-            const consoleDataJwt = (yield uploadingConsoleData).jwt;
-            return lodash_1.compact([uploadedVideo.jwt, uploadedTimeOffsets.jwt, consoleDataJwt]);
-        });
-    }
-    function createReport(report) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return postAjax('/api/report/create', report, {
-                errorMessageForUser: 'Failed to create report.',
-            });
-        });
-    }
-    function getIntegrationsList() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const data = yield fetchBugreplay(`/integrations/list`);
-                return data.integrations;
-            }
-            catch (error) {
-                if (error.error_name === 'ErrUserNotLoggedIn') {
-                    return {
-                        has_jira: false,
-                        has_slack: false,
-                        has_github: false,
-                        has_gitlab: false,
-                        has_trello: false,
-                    };
-                }
-                throw error;
-            }
-        });
-    }
-    function getJiraIntegration() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fetchBugreplay(`/integrations/jira/api/client_integration/list`);
-            return data.jira_client_integration;
-        });
-    }
-    function getJiraProjects() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fetchBugreplay(`/integrations/jira/api/issue/meta`);
-            return data.issue_meta.projects;
-        });
-    }
-    function getJiraPriorities() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fetchBugreplay(`/integrations/jira/api/issue/priorities`);
-            return data.priorities;
-        });
-    }
-    function getJiraUsers(project) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fetchBugreplay(`/integrations/jira/api/issue/find_assignable_users?project=${project}`);
-            return data.users;
-        });
-    }
-    function getJiraIssues(project) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fetchBugreplay(`/integrations/jira/api/issue/list?project=${project}`);
-            return data.issues.issues;
-        });
-    }
-    function createJiraTicket(reportID, jira) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield postAjax('/integrations/jira/api/issue/create', {
-                report_id: reportID,
-                project: jira.projectKey,
-                assignee: jira.assignee,
-                issue_type: jira.issueType,
-                priority: jira.priority,
-                parent_key: jira.issueType === 'Sub-task' ? jira.parentTask : undefined,
-            }, {
-                errorMessageForUser: 'Failed to create JIRA ticket.',
-            });
-        });
-    }
-    function getTrelloBoards() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fetchBugreplay('/integrations/trello/boards');
-            return data.boards;
-        });
-    }
-    function createTrelloCard(report_id, trello) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return postAjax('/integrations/trello/cards', {
-                report_id,
-                list_id: trello.listId,
-            }, {
-                errorMessageForUser: 'Failed to create trello card.',
-            });
-        });
-    }
-    function getReport(report_id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { report } = yield fetchBugreplay(`/api/report/detail?report_id=${report_id}`);
-            return report;
-        });
-    }
-    function deleteReport(report_id) {
-        return postAjax('/api/report/bulk_delete', { report_ids: report_id }, { errorMessageForUser: 'Failed to delete report.' });
-    }
-    function serializeError(error) {
-        const parsed = JSON.parse(JSON.stringify(error));
-        if (!!parsed && !!parsed.message && !!parsed.stack)
-            return error;
-        try {
-            const alt = {
-                message: error.message,
-                stack: error.stack,
-            };
-            Object.getOwnPropertyNames(error).forEach(key => {
-                alt[key] = error[key];
-            }, error);
-            return alt;
-        }
-        catch (e) {
-            console.error('failed to serializeError', error);
-            return {};
-        }
-    }
-    function sendError(error, actionType, userId, systemInfo) {
-        const logEntry = {
-            userId,
-            level: 'ERROR',
-            extensionVersion: settings.extensionVersion,
-            contextMessage: actionType,
-            browserInfo: systemInfo,
-            error: serializeError(error),
-        };
-        return postAjax('/api/user/log_error', JSON.stringify(logEntry), {
-            errorMessageForUser: 'Oh well',
+			const userInfo = JSON.parse('{"site_user":{"site_user_id":17650,"current_project_id":7299,"first_name":"prakash","last_name":"kumar","email":"raxero9555@hideemail.net","username":"prakash","initials":"ar","avatar":"","is_active":true,"is_registered":true,"agreed_to_tos":true,"client_short_name":"aaa","time_zone":"America/New_York","create_date":"2019-11-11T06:33:15.081702Z","update_date":"2019-11-11T06:33:15.081702Z","meta":{},"display_name":"prakash kumar"},"client":{"client_id":2746,"company":"aaa","is_active":true,"short_name":"aaa","status":"trial","plan_id":16,"plan_short_name":"trial","fbb_enabled":true,"create_date":"2019-11-11T06:33:14.966475Z","update_date":"2019-11-11T06:33:14.966476Z","meta":{},"client_hash":"WP88U5"},"sessions":{"raxero9555@hideemail.net (aaa)":"dyQ5IP"},"videos_left":56,"active_projects":[{"project_id":7299,"client_id":2746,"name":"aaa project","description":"This is your default BugReplay project. You can rename this project at any time.","created_by":{"Int64":0,"Valid":false},"created_by_first_name":{"String":"","Valid":false},"created_by_last_name":{"String":"","Valid":false},"number_of_reports":{"Int64":20,"Valid":true},"is_archived":false,"create_date":"2019-11-11T06:33:14.968296Z","update_date":"2019-11-11T06:33:14.968297Z","meta":{}}]}')
+			return { loggedIn: true, userInfo };
+            
         });
     }
     return {
-        getUserInfo,
-        getReports,
-        uploadRecordingAssets,
-        uploadScreenshot,
-        uploadNetworkData,
-        uploadSourceMaps,
-        createReport,
-        createJiraTicket,
-        getIntegrationsList,
-        getJiraIntegration,
-        getJiraProjects,
-        getJiraIssues,
-        getJiraPriorities,
-        getJiraUsers,
-        getTrelloBoards,
-        createTrelloCard,
-        getReport,
-        deleteReport,
-        sendError,
+        getUserInfo
     };
 }
 exports.api = api;
@@ -642,75 +239,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-function checkJira(integrations, api, dispatchBackgroundActions) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            if (!integrations.has_jira) {
-                dispatchBackgroundActions.jiraIntegrationRetrievalSuccess({
-                    fetchedFromServer: true,
-                    hasJira: false,
-                });
-                return;
-            }
-            const gettingPriorities = api.getJiraPriorities();
-            const gettingJiraProjects = api.getJiraProjects();
-            const projects = yield Promise.all((yield gettingJiraProjects).map((project) => __awaiter(this, void 0, void 0, function* () {
-                const gettingUsers = api.getJiraUsers(project.key);
-                const gettingIssues = api.getJiraIssues(project.key);
-                return Object.assign(Object.assign({}, project), { users: yield gettingUsers, issues: yield gettingIssues });
-            })));
-            const priorities = (yield gettingPriorities).map(priority => priority.name);
-            dispatchBackgroundActions.jiraIntegrationRetrievalSuccess({
-                fetchedFromServer: true,
-                hasJira: true,
-                priorities,
-                projects,
-            });
-        }
-        catch (error) {
-            dispatchBackgroundActions.jiraIntegrationRetrievalFailure(error);
-        }
-    });
-}
-exports.checkJira = checkJira;
-function checkTrello(integrations, api, dispatchBackgroundActions) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            if (!integrations.has_trello) {
-                dispatchBackgroundActions.trelloIntegrationRetrievalSuccess({
-                    fetchedFromServer: true,
-                    hasTrello: false,
-                });
-                return;
-            }
-            const gettingBoards = api.getTrelloBoards();
-            dispatchBackgroundActions.trelloIntegrationRetrievalSuccess({
-                fetchedFromServer: true,
-                hasTrello: true,
-                boards: yield gettingBoards,
-            });
-        }
-        catch (error) {
-            dispatchBackgroundActions.trelloIntegrationRetrievalFailure(error);
-        }
-    });
-}
-exports.checkTrello = checkTrello;
-function checkIntegrations(api, dispatchBackgroundActions) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const integrations = yield api.getIntegrationsList();
-            const checkingJira = checkJira(integrations, api, dispatchBackgroundActions);
-            const checkingTrello = checkTrello(integrations, api, dispatchBackgroundActions);
-            yield checkingJira;
-            yield checkingTrello;
-        }
-        catch (error) {
-            dispatchBackgroundActions.integrationsRetrievalFailure(error);
-        }
-    });
-}
-exports.checkIntegrations = checkIntegrations;
+
 
 },{}],7:[function(require,module,exports){
 "use strict";
@@ -938,7 +467,7 @@ function startRecording(tab, type, navigator, screen, tabCapture, desktopCapture
             tabRecorderReady = true;
             if (videoReady)
                 onBothReady();
-        });
+        });		
     }
     catch (error) {
         onError(error);
@@ -1308,35 +837,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 function uploadRecordingAssetsAheadOfTime(recorders, api, dispatchBackgroundActions) {
-    const uploadingAssets = api.uploadRecordingAssets(recorders);
-    dispatchBackgroundActions.uploadingAssets(uploadingAssets);
+    // const uploadingAssets = api.uploadRecordingAssets(recorders);
+    // dispatchBackgroundActions.uploadingAssets(uploadingAssets);
 }
 exports.uploadRecordingAssetsAheadOfTime = uploadRecordingAssetsAheadOfTime;
 // Creating the report doesn't give you all its details, so we need to fetch all those
 // Also, because the server is still processing for some time, we fetch the report until it is done processing or we time out
 function waitForReportToFinishProcessing(api, report_id, settings) {
     return new Promise((resolve, reject) => {
-        let done = false; // tslint:disable-line:no-let
-        const timeout = setTimeout(() => {
-            done = true;
-            reject({ message: 'Timed out creating report' });
-        }, settings.maxSecondsProcessing * 1000);
-        function check() {
-            api
-                .getReport(report_id)
-                .then(report => {
-                if (report && report.processing_status !== 'processing') {
-                    done = true;
-                    clearTimeout(timeout);
-                    resolve(report);
-                }
-                else if (!done) {
-                    setTimeout(check, 500);
-                }
-            })
-                .catch(reject);
-        }
-        check();
+        let done = true; // tslint:disable-line:no-let
+		resolve(report);
+        
     });
 }
 function uploadReportAssets(report, api) {
@@ -1417,9 +928,6 @@ function submitReport(navigator, report, api, settings, dispatchBackgroundAction
             dispatchBackgroundActions.reportProcessingSuccess(report.processingId, processedReport, networkTrafficUploadError, uploadedSourceMapHashErrors);
         }
         catch (error) {
-            if (report_id) {
-                api.deleteReport(report_id);
-            }
             dispatchBackgroundActions.reportProcessingFailure(report.processingId, error);
         }
     });
@@ -1438,18 +946,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-function checkReports(api, dispatchBackgroundActions) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const reports = yield api.getReports();
-            dispatchBackgroundActions.reportsRetrievalSuccess(reports);
-        }
-        catch (error) {
-            dispatchBackgroundActions.reportsRetrievalFailure(error);
-        }
-    });
-}
-exports.checkReports = checkReports;
 
 },{}],16:[function(require,module,exports){
 "use strict";
@@ -1579,7 +1075,6 @@ function logErrorAndReturnCopyForUser(settings, api, initialState, action) {
         const userId = initialState.userInfoResponse && initialState.userInfoResponse.loggedIn
             ? initialState.userInfoResponse.userInfo.site_user.site_user_id
             : undefined;
-        api.sendError(error, action.type, userId, systemInfo);
     }
     if (error.message === 'Failed to fetch')
         return errors.clientOffline;
@@ -1873,18 +1368,11 @@ function subscribe(settings, store, navigator, screen, tabs, tabCapture, desktop
         if (nextState.popup.connected && !prevState.popup.connected) {
             tab_1.checkActiveTab(tabs, dispatchBackgroundActions);
             user_1.checkUserInfo(api, dispatchBackgroundActions);
-            reports_1.checkReports(api, dispatchBackgroundActions);
-            integrations_1.checkIntegrations(api, dispatchBackgroundActions);
         }
         // Get system info when active tab is available
         if (nextState.popup.activeTab &&
             !prevState.popup.activeTab) {
             system_info_1.checkSystemInfo(navigator, chrome, tabs, nextState.popup.activeTab, dispatchBackgroundActions);
-        }
-        // Take a screenshot if requested by the user
-        if (nextState.screenshot.requestedByUser &&
-            !prevState.screenshot.requestedByUser) {
-            screenshot_1.takeScreenshot(nextState.popup.activeTab, tabs, dispatchBackgroundActions);
         }
         // Start recording when the user clicks record
         if (nextState.recording.startedByUser &&
@@ -1895,12 +1383,6 @@ function subscribe(settings, store, navigator, screen, tabs, tabCapture, desktop
         if (nextState.recording.stoppedByUser &&
             !prevState.recording.stoppedByUser) {
             nextState.recording.stop();
-        }
-        // Upload the recording assets ahead of time if that setting is on and the recording has stopped
-        if (settings.uploadRecordingAssetsAheadOfTime &&
-            nextState.recording.stopped &&
-            !prevState.recording.stopped) {
-            report_1.uploadRecordingAssetsAheadOfTime(nextState.recording.recorders, api, dispatchBackgroundActions);
         }
         // Process any report just added to the processing queue
         if (nextState.reports.processing.length > prevState.reports.processing.length) {
