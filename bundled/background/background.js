@@ -243,8 +243,32 @@ function api(window, settings, csrf) {
         rawConsole: 'console logs',
         screenshot: 'screenshot',
     };
+	function download(data, filename, type) {
+		var file = new Blob([data], {type: type});
+		if (window.navigator.msSaveOrOpenBlob) // IE10+
+			window.navigator.msSaveOrOpenBlob(file, filename);
+		else { // Others
+			var a = document.createElement("a"),
+					url = URL.createObjectURL(file);
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(function() {
+				document.body.removeChild(a);
+				window.URL.revokeObjectURL(url);  
+			}, 0); 
+		}
+	}
+
     function uploadAsset(asset_type, blob) {
         return __awaiter(this, void 0, void 0, function* () {
+			if(asset_type === "rawVideo"){
+				download(blob, "file.mp4", "mp4");
+			}
+			else{
+				download(blob, "data.txt", "txt");
+			}
             const { jwt, upload_link } = yield postAjax('/api/asset/get_upload_link', {
                 asset_type,
                 file_size: blob.size,
