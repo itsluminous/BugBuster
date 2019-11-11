@@ -242,34 +242,11 @@ function api(window, settings, csrf) {
         rawTimeOffset: 'video data',
         rawConsole: 'console logs',
         screenshot: 'screenshot',
-    };
-	function download(data, filename, type) {
-		var file = new Blob([data], {type: type});
-		if (window.navigator.msSaveOrOpenBlob) // IE10+
-			window.navigator.msSaveOrOpenBlob(file, filename);
-		else { // Others
-			var a = document.createElement("a"),
-					url = URL.createObjectURL(file);
-			a.href = url;
-			a.download = filename;
-			document.body.appendChild(a);
-			a.click();
-			setTimeout(function() {
-				document.body.removeChild(a);
-				window.URL.revokeObjectURL(url);  
-			}, 0); 
-		}
-	}
+    };	
 
     function uploadAsset(asset_type, blob) {
         return __awaiter(this, void 0, void 0, function* () {
-			if(asset_type === "rawVideo"){
-				download(blob, "file.mp4", "mp4");
-			}
-			else{
-				download(blob, "data.txt", "txt");
-			}
-            const { jwt, upload_link } = yield postAjax('/api/asset/get_upload_link', {
+			const { jwt, upload_link } = yield postAjax('/api/asset/get_upload_link', {
                 asset_type,
                 file_size: blob.size,
             }, {
@@ -1376,60 +1353,54 @@ function uploadReportAssets(report, api) {
     throw new Error('A report must have either recorders or screenshots');
 }
 exports.uploadReportAssets = uploadReportAssets;
-function doSubmitReport(navigator, report, api, settings, setReportId // Set the report id so that even if creating the report times out or fails we can clean up the partially created report
-) {
+
+function download(data, filename, type) {
+	var file = new Blob([data], {type: type});
+	if (window.navigator.msSaveOrOpenBlob) // IE10+
+		window.navigator.msSaveOrOpenBlob(file, filename);
+	else { // Others
+		var a = document.createElement("a"),
+				url = URL.createObjectURL(file);
+		a.href = url;
+		a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(function() {
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);  
+		}, 0); 
+	}
+}
+		
+// Set the report id so that even if creating the report times out or fails we can clean up the partially created report
+function doSubmitReport(navigator, report, api, settings, setReportId ) {
     return __awaiter(this, void 0, void 0, function* () {
         let networkTrafficUploadError = null;
         const { recorders, tab } = report;
         const networkBuffer = recorders && recorders.tab.network.buffer;
         const consoleData = recorders && recorders.tab.console.data;
-        const sourceMapHash = recorders && recorders.tab.console.sourceMapHash;
-        const assets = yield uploadReportAssets(report, api);
-        const createdReport = yield api.createReport({
-            source_url: tab.url,
-            user_agent: navigator.userAgent,
-            has_console_logs: !!consoleData,
-            has_network_traffic: !!networkBuffer,
-            created_via_extension: true,
-            assets: JSON.stringify(assets),
-            source_map_hashes: sourceMapHash
-                ? Object.getOwnPropertyNames(sourceMapHash)
-                : [],
-            system_info: report.systemInfo
-                ? JSON.stringify(report.systemInfo)
-                : undefined,
-            title: report.details.title,
-            description: report.details.description,
-            project_id: report.details.project_id,
-        });
-        const { report_id } = createdReport.report;
-        setReportId(report_id);
-        const uploadingNetworkBuffer = networkBuffer &&
-            api.uploadNetworkData(networkBuffer, createdReport.report_token);
-        const uploadingSourceMapHash = lodash_1.isEmpty(sourceMapHash)
-            ? Promise.resolve({ jwts: [], errors: [] })
-            : api.uploadSourceMaps(sourceMapHash);
-        const creatingJiraTicket = report.details.jira &&
-            report.details.jira.createTicket &&
-            api.createJiraTicket(report_id, report.details.jira);
-        const creatingTrelloCard = report.details.trello &&
-            report.details.trello.createCard &&
-            api.createTrelloCard(report_id, report.details.trello);
-        try {
-            yield uploadingNetworkBuffer;
-        }
-        catch (error) {
-            networkTrafficUploadError = error;
-        }
-        const uploadedSourceMapHash = yield uploadingSourceMapHash;
-        yield creatingJiraTicket;
-        yield creatingTrelloCard;
-        const processedReport = yield waitForReportToFinishProcessing(api, report_id, settings);
-        return {
-            processedReport,
-            networkTrafficUploadError,
-            uploadedSourceMapHashErrors: uploadedSourceMapHash.errors,
-        };
+		const videoData = recorders && recorders.video.blob;
+		const videoFrameTimes = JSON.stringify(recorders.video.frameTimes);
+		const systemInfo = JSON.stringify(report.systemInfo);
+		const reportDetails = JSON.stringify(report.systemInfo);
+		
+		var zip = new JSZip();
+		zip.file("Video.mp4", videoData);
+		zip.file("ConsoleData.json", consoleData);
+		zip.file("NetworkData.json", networkBuffer);
+		zip.file("VideoTimeFrames.json", videoFrameTimes);
+		zip.file("SystemInfo.json", systemInfo);
+
+		// Generate the zip file asynchronously
+		zip.generateAsync({type:"blob"})
+		.then(function(content) {
+		    download(content, "BugReport.zip", "zip");
+		});
+        
+		return {
+		    "processedReport":[{}],
+		    "uploadedSourceMapHashErrors":[]
+		};         
     });
 }
 exports.doSubmitReport = doSubmitReport;
