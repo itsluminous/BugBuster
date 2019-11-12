@@ -520,8 +520,14 @@ const toLog = new Set([
 ]);
 function startNetworkRecorder(tabId, chrome, onNetworkError) {
     const requests = new Map();
-    let buffer = ''; // tslint:disable-line:no-let
-    const log = (type, data) => (buffer += JSON.stringify({ type, data }));
+    let buffer = '[]';
+    const log = (type, data) => {
+		buffer = buffer.substring(0, buffer.length - 1);
+		if(buffer !== '['){
+			buffer = buffer + ','
+		}
+		buffer = buffer + JSON.stringify({ type, data }) + ']';
+	};
     function onEvent(type, data) {
         if (!toLog.has(type))
             return;
@@ -836,34 +842,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
-function uploadRecordingAssetsAheadOfTime(recorders, api, dispatchBackgroundActions) {
-    // const uploadingAssets = api.uploadRecordingAssets(recorders);
-    // dispatchBackgroundActions.uploadingAssets(uploadingAssets);
-}
-exports.uploadRecordingAssetsAheadOfTime = uploadRecordingAssetsAheadOfTime;
-// Creating the report doesn't give you all its details, so we need to fetch all those
-// Also, because the server is still processing for some time, we fetch the report until it is done processing or we time out
-function waitForReportToFinishProcessing(api, report_id, settings) {
-    return new Promise((resolve, reject) => {
-        let done = true; // tslint:disable-line:no-let
-		resolve(report);
-        
-    });
-}
-function uploadReportAssets(report, api) {
-    const { recorders, screenshots } = report;
-    if (recorders) {
-        return report.uploadingAssets || api.uploadRecordingAssets(recorders);
-    }
-    if (screenshots.length) {
-        return Promise.all(screenshots.map((screenshot) => __awaiter(this, void 0, void 0, function* () {
-            const { jwt } = yield api.uploadScreenshot(screenshot);
-            return jwt;
-        })));
-    }
-    throw new Error('A report must have either recorders or screenshots');
-}
-exports.uploadReportAssets = uploadReportAssets;
 
 function download(data, filename, type) {
 	var file = new Blob([data], {type: type});
@@ -1019,7 +997,6 @@ function getExtensionVersion() {
 exports.settings = {
     debug: true,
     maxReportsToShow: 5,
-    uploadRecordingAssetsAheadOfTime: true,
     isTestEnvironment: false,
     maxSecondsProcessing: 15 * 60,
     extensionVersion: getExtensionVersion(),
