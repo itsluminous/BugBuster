@@ -84,7 +84,7 @@ function appendNetworkData() {
 				catch{ var responseCode = ""}				
 				
 				var div = document.createElement("div");
-				div.innerHTML = '<a href="javascript:void(0);" onclick="return showNetworkData(' + requestId + ');"><b class="method"> ' + networkData[keys[i]].data.request.method + '</b> - <b class="' + responseClass + '"> ' + responseCode + '</b> - ' + networkData[keys[i]].data.documentURL + '</a>';
+				div.innerHTML = '<a href="javascript:void(0);" onclick="return showNetworkData(\'' + requestId + '\');"><b class="method"> ' + networkData[keys[i]].data.request.method + '</b> - <b class="' + responseClass + '"> ' + responseCode + '</b> - ' + networkData[keys[i]].data.documentURL + '</a>';
 				mainContainer.appendChild(div);
 				var hr = document.createElement("hr");
 				mainContainer.appendChild(hr);
@@ -103,24 +103,56 @@ function showConsoleData(index){
 	mainContainer.appendChild(tbl);
 }
 
+function syntaxHighlight(json) {
+    if (typeof json != 'string') {
+         json = JSON.stringify(json, undefined, 2);
+    }
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
+
 function showNetworkData(requestId){
-	try{
-		var request = networkData[requestId + 'requestWillBeSent'].data;
-	}
-	catch{ var request = ""}
+	var request = networkData[requestId + 'requestWillBeSent'].data;
 	try{
 		var response = networkData[requestId + 'responseReceived'].data;
 	}
-	catch{ var response = ""}
+	catch{ var response = null}
 	try{
 		var responseBody = networkData[requestId + 'responseBody'].data;
 	}
-	catch{ var responseBody = ""}
+	catch{ var responseBody = null}
 	
 	var mainContainer = document.getElementById("infoPanel");
 	var tbl = document.createElement("table");
 	tbl.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
-	tbl.innerHTML = '<h4>General</h4><div><h5>URL</h5><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>' + request.request.url + '</td></tr></tbody></table></div>'
+	htmlString = '<h4>General</h4><div><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>URL </td><td>' + request.request.url + '</td></tr></tbody></table></div>';
+	htmlString += '<div><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>Page URL </td><td>' + request.documentURL + '</td></tr><tr><td>Method </td><td>' + request.method + '</td></tr>';
+	if(response != null)
+		htmlString += '<tr><td>Status </td><td>' + response.response.status + '</td></tr>';
+	htmlString += '</tbody></table></div>'
+	htmlString += '<div><h5>Timing</h5><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>Start </td><td>' + new Date(request.timestamp) + '</td></tr>'
+	if(response != null)
+		htmlString += '<tr><td>End </td><td>' + new Date(response.timestamp) + '</td></tr>';
+	htmlString += '</tbody></table></div>'
+	
+	
+	if(responseBody != null)
+		htmlString += '<h4>Response</h4><div><pre>' + syntaxHighlight(JSON.parse(responseBody.data.body)) + '</pre></div>';
+	tbl.innerHTML = htmlString;
 	mainContainer.innerHTML = "";
 	mainContainer.appendChild(tbl);
 }
