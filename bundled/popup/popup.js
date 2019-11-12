@@ -186,7 +186,7 @@ const React = require("react");
 const styles_1 = require("@material-ui/core/styles");
 const styles = (theme) => ({
     header: {
-        backgroundColor: 'white',
+        backgroundColor: '#00a2e8',
         minWidth: 200,
         padding: 12,
         display: 'flex',
@@ -194,9 +194,10 @@ const styles = (theme) => ({
         alignItems: 'center',
     },
     icon: {
-        height: 24,
-        display: 'inline',
-        marginRight: 8,
+        height: 35,
+        marginLeft: 50,
+         display: 'flex',
+         justifyContent: 'center',
     },
     headerContents: {
         width: '100%',
@@ -208,8 +209,10 @@ const styles = (theme) => ({
 exports.Header = styles_1.withStyles(styles)(class Header extends React.Component {
     render() {
         const className = this.props.classes.header + ' ' + (this.props.className || '');
-        return (React.createElement("div", { className: className }));
-    }
+        return (React.createElement("div", {variant: "contained", color: "dark", title: "Click below icon to start your Recording!", className: className },
+       React.createElement("a", { target: "_blank" },
+       React.createElement("img", { src: "/img/full_logo.png", className: this.props.classes.icon })),
+       React.createElement("div", { className: this.props.classes.headerContents }, this.props.children)));    }
 });
 
 },{"@material-ui/core/styles":322,"react":457}],6:[function(require,module,exports){
@@ -286,8 +289,10 @@ const React = require("react");
 const styles_1 = require("@material-ui/core/styles");
 const styles = (theme) => ({
     buttonPanel: {
-        display: 'flex',
-        justifyContent: 'center',
+      padding: 12,
+      display: 'flex',
+      minWidth: 150,
+      justifyContent: 'center',
     },
 });
 exports.RecordingPanel = styles_1.withStyles(styles)(class RecordingPanel extends React.Component {
@@ -374,7 +379,7 @@ function textStatusFor(stat) {
 }
 function iconImgUrl(report) {
     if (report.processed_video_count > 0)
-        return '/img/video-camera-tiny.svg';
+        return '/img/rec-start.png';
     if (report.screenshot_count > 0)
         return '/img/screenshot-tiny.svg';
 }
