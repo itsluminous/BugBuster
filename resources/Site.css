@@ -1,0 +1,54 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  line-height: unset;
+}
+
+img {
+    height: 25px;
+}
+
+.bg-nav
+{
+    background-color: #00a2e8;
+}
+
+video {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.nav-link{
+	font-weight: bold;
+	color:#000;
+}
+
+.tab-pane {
+	overflow-y: scroll;
+	height: 280px;
+}
+
+.infoPanel {
+	overflow-y: scroll;
+}
+
+.method{
+	background-color:#999;
+	color:#fff;
+}
+
+.responseSuccess{
+	background-color:#5cb85c;
+	color:#fff;
+}
+
+.responseWarning{
+	background-color:#f0ad4e;
+	color:#fff;
+}
+
+.responseError{
+	background-color:#d9534f;
+	color:#fff;
+}

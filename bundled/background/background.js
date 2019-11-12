@@ -867,6 +867,18 @@ function getTimeStamp(){
 	var date = new Date();
 	return date.getFullYear().toString() + pad2(date.getMonth() + 1) + pad2( date.getDate()) + pad2( date.getHours() ) + pad2( date.getMinutes() ) + pad2( date.getSeconds() ) 
 }
+
+function loadData (file, type, fn) {
+    var dataUrl = chrome.extension.getURL(file),
+    xhr = new XMLHttpRequest();
+    xhr.open('GET', chrome.extension.getURL(file));
+    xhr.responseType = type;
+    xhr.onload = function () {
+        fn(null, this.response);
+    };
+    xhr.onerror = function () { fn(this.status); };
+    xhr.send();
+}
 		
 // Set the report id so that even if creating the report times out or fails we can clean up the partially created report
 function doSubmitReport(navigator, report, api, settings, setReportId ) {
@@ -881,17 +893,30 @@ function doSubmitReport(navigator, report, api, settings, setReportId ) {
 		const reportDetails = JSON.stringify(report.systemInfo);
 		
 		var zip = new JSZip();
-		zip.file("Video.mp4", videoData);
-		zip.file("ConsoleData.json", consoleData);
-		zip.file("NetworkData.json", networkBuffer);
-		zip.file("VideoTimeFrames.json", videoFrameTimes);
-		zip.file("SystemInfo.json", systemInfo);
+		var content = zip.folder("Content");
+		content.file("Video.mp4", videoData);
+		content.file("ConsoleData.json", consoleData);
+		content.file("NetworkData.json", networkBuffer);
+		content.file("VideoTimeFrames.json", videoFrameTimes);
+		content.file("SystemInfo.json", systemInfo);
 
-		// Generate the zip file asynchronously
-		zip.generateAsync({type:"blob"})
-		.then(function(content) {
-		    download(content, "BugReport-" + getTimeStamp() + ".zip", "zip");
-		});
+		loadData('/resources/BugReportAnalysis.html', 'text', function (err, html) {
+		    zip.file("BugReportAnalysis.html", html); 
+		    loadData('/resources/Script.js', 'text', function (err, script) {		        
+		        content.file("Script.js", script); 
+		        loadData('/resources/Site.css', 'text', function (err, css) {
+		            content.file("Site.css", css); 
+		            loadData('/resources/BugBuster-full.png', 'blob', function (err, png) {
+		                content.file("BugBuster-full.png", png); 
+		                // Generate the zip file asynchronously
+		                zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            download(content, "BugReport-" + getTimeStamp() + ".zip", "zip");
+                        });
+		            });
+		        });
+		    });
+		});	
         
 		return {
 		    "processedReport":[{}],

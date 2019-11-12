@@ -18,5 +18,7 @@
    "permissions": [ "\u003Call_urls>", "activeTab", "alarms", "storage", "notifications", "tabs", "webNavigation", "webRequest", "debugger", "tabCapture", "desktopCapture" ],
    "short_name": "BugBuster",
    "version": "3.0.17",
-   "web_accessible_resources": [  ]
+  "web_accessible_resources": [
+    "resources/*"
+  ]
 }
