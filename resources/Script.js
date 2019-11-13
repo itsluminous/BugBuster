@@ -2,36 +2,27 @@ var consoleData = {};
 var networkData = {};
 var systemData = {};
 
-fetch('Content/SystemInfo.json')
-  .then(function (response) {
-	return response.json();
-  })
-  .then(function (data) {
+function loadData (file, type, fn) {
+    xhr = new XMLHttpRequest();
+    xhr.open('GET', file);
+    xhr.responseType = type;
+    xhr.onload = function () { fn(null, this.response);};
+    xhr.onerror = function () { console.error("XHR requests are not enabled, check readme on git."); };
+    xhr.send();
+}
+
+loadData('Content/SystemInfo.json', 'json', function (err, data) {
 	systemData = data;
 	showSystemData('infoPanel');
 	showSystemData('systemInfo');
-  })
-  .catch(function (err) {
-	console.log(err);
 });
 
-fetch('Content/ConsoleData.json')
-  .then(function (response) {
-	return response.json();
-  })
-  .then(function (data) {
+loadData('Content/ConsoleData.json', 'json', function (err, data) {
 	consoleData = data;
 	appendConsoleData();
-  })
-  .catch(function (err) {
-	console.log(err);
 });
 
-fetch('Content/NetworkData.json')
-  .then(function (response) {
-	return response.json();
-  })
-  .then(function (data) {
+loadData('Content/NetworkData.json', 'json', function (err, data) {
 	if(data != undefined){
 		for (var i = 0; i < data.length; i++) {
 			var type = data[i].type;
@@ -40,9 +31,6 @@ fetch('Content/NetworkData.json')
 		}
 	}
 	appendNetworkData();
-  })
-  .catch(function (err) {
-	console.log(err);
 });
 
 function appendConsoleData() {
@@ -103,28 +91,6 @@ function showConsoleData(index){
 	mainContainer.appendChild(tbl);
 }
 
-function syntaxHighlight(json) {
-    if (typeof json != 'string') {
-         json = JSON.stringify(json, undefined, 2);
-    }
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-        var cls = 'number';
-        if (/^"/.test(match)) {
-            if (/:$/.test(match)) {
-                cls = 'key';
-            } else {
-                cls = 'string';
-            }
-        } else if (/true|false/.test(match)) {
-            cls = 'boolean';
-        } else if (/null/.test(match)) {
-            cls = 'null';
-        }
-        return '<span class="' + cls + '">' + match + '</span>';
-    });
-}
-
 function showNetworkData(requestId){
 	var request = networkData[requestId + 'requestWillBeSent'].data;
 	try{
@@ -164,4 +130,26 @@ function showSystemData(elementId){
 	tbl.innerHTML = '<tbody><tr><td>OS </td><td>' + systemData.level + '</td></tr><tr><td>Browser </td><td>' + systemData.user_agent + '</td></tr><tr><td>Languages </td><td>' + systemData.languages[0] + ',' + systemData.languages[1] + '</td></tr><tr><td>Report Time </td><td>' + new Date(systemData.time) + '</td></tr><tr><td>Time Zone offset </td><td>' + systemData.timezone_offset + '</td></tr><tr><td>Cookies enabled </td><td>' + systemData.cookie_enabled + '</td></tr></tbody>'
 	mainContainer.innerHTML = "";
 	mainContainer.appendChild(tbl);
+}
+
+function syntaxHighlight(json) {
+    if (typeof json != 'string') {
+         json = JSON.stringify(json, undefined, 2);
+    }
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
 }
