@@ -33,6 +33,12 @@ loadData('Content/NetworkData.json', 'json', function (err, data) {
 	appendNetworkData();
 });
 
+function parseTimeStamp(timestamp){
+	var split = timestamp.toString().split('.');
+	var num = parseInt(split[0] + split[1].substr(0,3));
+	return new Date(num);
+}
+
 function appendConsoleData() {
 	if(consoleData.console_logs != undefined){
 		var mainContainer = document.getElementById("consoleLogs");
@@ -88,7 +94,7 @@ function showConsoleData(index){
 	h4.innerHTML = "Console Logs";
 	var tbl = document.createElement("table");
 	tbl.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
-	tbl.innerHTML = '<tbody><tr><td>Level </td><td>' + data.level + '</td></tr><tr><td>Source </td><td>' + data.source + '</td></tr><tr><td>Text </td><td>' + data.text + '</td></tr><tr><td>Time </td><td>' + data.timestamp + '</td></tr><tr><td>Url </td><td>' + data.url + '</td></tr></tbody>'
+	tbl.innerHTML = '<tbody><tr><td>Level </td><td>' + data.level + '</td></tr><tr><td>Source </td><td>' + data.source + '</td></tr><tr><td>Text </td><td>' + data.text + '</td></tr><tr><td>Time </td><td>' + parseTimeStamp(data.timestamp) + '</td></tr><tr><td>Url </td><td>' + data.url + '</td></tr></tbody>'
 	mainContainer.innerHTML = "";
 	mainContainer.appendChild(h4);
 	mainContainer.appendChild(tbl);
@@ -113,9 +119,9 @@ function showNetworkData(requestId){
 	if(response != null)
 		htmlString += '<tr><td>Status </td><td>' + response.response.status + '</td></tr>';
 	htmlString += '</tbody></table></div>'
-	htmlString += '<div><h5>Timing</h5><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>Start </td><td>' + new Date(request.timestamp) + '</td></tr>'
-	if(response != null)
-		htmlString += '<tr><td>End </td><td>' + new Date(response.timestamp) + '</td></tr>';
+	htmlString += '<div><h5>Timing</h5><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>Start </td><td>' + parseTimeStamp(request.wallTime) + '</td></tr>'
+	// if(response != null)
+		// htmlString += '<tr><td>End </td><td>' + response.response.headers.date + '</td></tr>';
 	htmlString += '</tbody></table></div>'
 	
 	htmlString += '<h4>Request Headers</h4><div><table class="table table-bordered table-hover table-condensed br-table"><tbody>'
