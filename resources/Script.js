@@ -115,15 +115,30 @@ function showNetworkData(requestId){
 		htmlString += '<tr><td>End </td><td>' + new Date(response.timestamp) + '</td></tr>';
 	htmlString += '</tbody></table></div>'
 	
+	htmlString += '<h4>Request Headers</h4><div><table class="table table-bordered table-hover table-condensed br-table"><tbody>'
+	Object.keys(request.request.headers).forEach(function(k){
+		htmlString += '<tr><td>' + k + ' </td><td>' + request.request.headers[k] + '</td></tr>';
+	});
+	htmlString += '</tbody></table></div>'
 	
-	if(responseBody != null)
+	if(response != null){
+		htmlString += '<h4>Request Cookies</h4><div>' + response.response.requestHeaders.cookie + '</div><hr/>'
+		htmlString += '<h4>Response Headers</h4><div><table class="table table-bordered table-hover table-condensed br-table"><tbody>'
+		Object.keys(response.response.headers).forEach(function(k){
+			htmlString += '<tr><td>' + k + ' </td><td>' + response.response.headers[k] + '</td></tr>';
+		});
+		htmlString += '</tbody></table></div>'
 		htmlString += '<h4>Response</h4><div><pre>' + syntaxHighlight(JSON.parse(responseBody.data.body)) + '</pre></div>';
+	}		
+	
 	tbl.innerHTML = htmlString;
 	mainContainer.innerHTML = "";
 	mainContainer.appendChild(tbl);
 }
 
 function showSystemData(elementId){
+	if(systemData.level == undefined)
+		systemData.level = "Windows 10";
 	var mainContainer = document.getElementById(elementId);
 	var tbl = document.createElement("table");
 	tbl.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
