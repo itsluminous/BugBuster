@@ -1,9 +1,4 @@
-html,
-body {
-  height: 100%;
-  margin: 0;
-  line-height: unset;
-}
+
 
 img {
     height: 25px;
@@ -12,6 +7,10 @@ img {
 .bg-nav
 {
     background-color: #00a2e8;
+}
+
+#wrapper {
+	margin-top : 28px !important;
 }
 
 video {
@@ -26,11 +25,12 @@ video {
 
 .tab-pane {
 	overflow-y: scroll;
-	height: 280px;
+	height: 220px;
 }
 
-.infoPanel {
-	overflow-y: scroll;
+#infoPanel {
+	margin-top: 5px !important;
+	margin-right: 5px !important;
 }
 
 .method{
@@ -51,4 +51,44 @@ video {
 .responseError{
 	background-color:#d9534f;
 	color:#fff;
+}
+
+#sidebar-wrapper {
+    z-index: 1000;
+    position: fixed;
+    right: 450px;
+    width: 0;
+    height: 100%;
+    margin-right: -450px;
+    overflow-y: auto;
+}
+
+#page-content-wrapper {
+    width: 100%;
+    position: absolute;
+    padding: 5px !important;
+}
+
+.sidebar-nav {
+    position: absolute;
+    top: 0;
+    width: 450px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media(min-width:768px) {
+    #wrapper {
+        padding-right: 450px;
+    }
+    
+    #sidebar-wrapper {
+        width: 450px;
+    }
+   
+    #page-content-wrapper {
+        padding: 20px;
+        position: relative;
+    }
 }

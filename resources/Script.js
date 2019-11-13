@@ -84,10 +84,13 @@ function appendNetworkData() {
 function showConsoleData(index){
 	var data = consoleData.console_logs[index];
 	var mainContainer = document.getElementById("infoPanel");
+	var h4 = document.createElement("h4");
+	h4.innerHTML = "Console Logs";
 	var tbl = document.createElement("table");
 	tbl.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
 	tbl.innerHTML = '<tbody><tr><td>Level </td><td>' + data.level + '</td></tr><tr><td>Source </td><td>' + data.source + '</td></tr><tr><td>Text </td><td>' + data.text + '</td></tr><tr><td>Time </td><td>' + data.timestamp + '</td></tr><tr><td>Url </td><td>' + data.url + '</td></tr></tbody>'
 	mainContainer.innerHTML = "";
+	mainContainer.appendChild(h4);
 	mainContainer.appendChild(tbl);
 }
 
@@ -103,8 +106,8 @@ function showNetworkData(requestId){
 	catch{ var responseBody = null}
 	
 	var mainContainer = document.getElementById("infoPanel");
-	var tbl = document.createElement("table");
-	tbl.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
+	var div = document.createElement("div");
+	div.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
 	htmlString = '<h4>General</h4><div><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>URL </td><td>' + request.request.url + '</td></tr></tbody></table></div>';
 	htmlString += '<div><table class="table table-bordered table-hover table-condensed br-table"><tbody><tr><td>Page URL </td><td>' + request.documentURL + '</td></tr><tr><td>Method </td><td>' + request.method + '</td></tr>';
 	if(response != null)
@@ -122,28 +125,36 @@ function showNetworkData(requestId){
 	htmlString += '</tbody></table></div>'
 	
 	if(response != null){
-		htmlString += '<h4>Request Cookies</h4><div>' + response.response.requestHeaders.cookie + '</div><hr/>'
+		if(response.response.requestHeaders != null && response.response.requestHeaders != undefined)
+			htmlString += '<h4>Request Cookies</h4><div>' + response.response.requestHeaders.cookie + '</div><hr/>'
 		htmlString += '<h4>Response Headers</h4><div><table class="table table-bordered table-hover table-condensed br-table"><tbody>'
 		Object.keys(response.response.headers).forEach(function(k){
 			htmlString += '<tr><td>' + k + ' </td><td>' + response.response.headers[k] + '</td></tr>';
 		});
 		htmlString += '</tbody></table></div>'
-		htmlString += '<h4>Response</h4><div><pre>' + syntaxHighlight(JSON.parse(responseBody.data.body)) + '</pre></div>';
-	}		
+	}	
+
+	if(responseBody != null){
+		htmlString += '<h4>Response Body</h4><div><pre>' + syntaxHighlight(JSON.parse(responseBody.data.body)) + '</pre></div>';
+	}	
 	
-	tbl.innerHTML = htmlString;
+	div.innerHTML = htmlString;
 	mainContainer.innerHTML = "";
-	mainContainer.appendChild(tbl);
+	mainContainer.appendChild(div);
 }
 
 function showSystemData(elementId){
 	if(systemData.level == undefined)
 		systemData.level = "Windows 10";
 	var mainContainer = document.getElementById(elementId);
+	var h4 = document.createElement("h4");
+	h4.innerHTML = "System Data";
 	var tbl = document.createElement("table");
 	tbl.setAttribute("class", "table table-bordered table-hover table-condensed br-table");
 	tbl.innerHTML = '<tbody><tr><td>OS </td><td>' + systemData.level + '</td></tr><tr><td>Browser </td><td>' + systemData.user_agent + '</td></tr><tr><td>Languages </td><td>' + systemData.languages[0] + ',' + systemData.languages[1] + '</td></tr><tr><td>Report Time </td><td>' + new Date(systemData.time) + '</td></tr><tr><td>Time Zone offset </td><td>' + systemData.timezone_offset + '</td></tr><tr><td>Cookies enabled </td><td>' + systemData.cookie_enabled + '</td></tr></tbody>'
 	mainContainer.innerHTML = "";
+	if(elementId === "infoPanel")
+		mainContainer.appendChild(h4);
 	mainContainer.appendChild(tbl);
 }
 
