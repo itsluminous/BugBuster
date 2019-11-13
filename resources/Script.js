@@ -43,9 +43,11 @@ function appendConsoleData() {
 	if(consoleData.console_logs != undefined){
 		var mainContainer = document.getElementById("consoleLogs");
 		for (var i = 0; i < consoleData.console_logs.length; i++) {
-			if(consoleData.console_logs[i].level != undefined){
-			  var div = document.createElement("div");
-				div.innerHTML = '<a href="javascript:void(0);" onclick="return showConsoleData(' + i + ');">' + consoleData.console_logs[i].text + '</a>';
+			var errorLevel = consoleData.console_logs[i].level;
+			if(errorLevel != undefined){
+				consoleClass = errorLevel == 'error' ? 'consoleError' : 'consoleWarning';
+				var div = document.createElement("div");
+				div.innerHTML = '<a class="' + consoleClass + '" href="javascript:void(0);" onclick="return showConsoleData(' + i + ');">' + consoleData.console_logs[i].text + '</a>';
 				mainContainer.appendChild(div);
 				var hr = document.createElement("hr");
 				mainContainer.appendChild(hr);

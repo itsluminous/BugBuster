@@ -28,9 +28,19 @@ video {
 	height: 220px;
 }
 
+table {
+    table-layout: fixed;
+    width: 100%;   
+}
+
+th,td {
+    word-wrap: break-word;
+}
+
 #infoPanel {
 	margin-top: 5px !important;
 	margin-right: 5px !important;
+	padding-right: 10px !important;
 }
 
 .method{
@@ -51,6 +61,14 @@ video {
 .responseError{
 	background-color:#d9534f;
 	color:#fff;
+}
+
+.consoleError{
+	color:#d9534f;
+}
+
+.consoleWarning{
+	color:#f0ad4e;
 }
 
 #sidebar-wrapper {
